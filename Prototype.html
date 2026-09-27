@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dark-Pattern Warning Tool — Study Prototype</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --line:#2a313c; --ink:#e8eaed; --muted:#9aa4b2;
+    --brand:#12b981; --brand-ink:#06301f; --warn:#ff8a3d; --warn-soft:#3a2414;
+    --card:#1c222b; --white:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%, #1a2230 0%, transparent 60%),var(--bg);
+    color:var(--ink);font-family:"Segoe UI",-apple-system,Roboto,Helvetica,Arial,sans-serif;min-height:100vh;}
+  .wrap{max-width:1180px;margin:0 auto;padding:34px 40px 80px;}
+  header.top{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:8px;}
+  header.top h1{font-size:22px;margin:0;font-weight:600;letter-spacing:.2px;}
+  header.top .sub{color:var(--muted);font-size:14px;}
+  .layout{display:grid;grid-template-columns:1fr 340px;gap:34px;margin-top:28px;align-items:start;}
+  .device{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.4);}
+  .appbar{background:var(--brand);color:var(--brand-ink);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;font-weight:700;}
+  .appbar .cart{font-size:13px;font-weight:600;background:rgba(255,255,255,.35);padding:4px 10px;border-radius:20px;}
+  .toolstrip{display:flex;align-items:center;gap:10px;background:#12171e;border-bottom:1px solid var(--line);padding:9px 20px;font-size:12.5px;color:var(--muted);justify-content:space-between;}
+  .toolstrip .left{display:flex;align-items:center;gap:10px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 3px var(--warn-soft);}
+  .dot.off{background:#666;box-shadow:0 0 0 3px #222;}
+  .offbtn{background:transparent;border:1px solid var(--line);color:var(--muted);font-size:11.5px;padding:3px 9px;border-radius:14px;cursor:pointer;}
+  .offbtn:hover{border-color:var(--warn);color:var(--ink);}
+  .screen{padding:24px 24px 28px;min-height:440px;}
+  .screen h2{margin:2px 0 4px;font-size:18px;}
+  .screen .step{color:var(--muted);font-size:12.5px;margin-bottom:18px;}
+  .row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:12px;}
+  .row .name{font-size:14.5px;}
+  .row .price{color:var(--muted);font-size:14px;}
+  .row.addon{align-items:flex-start;gap:12px;}
+  .row.addon input{margin-top:3px;transform:scale(1.25);accent-color:var(--brand);}
+  .muted{color:var(--muted);font-size:13px;}
+  .total{display:flex;justify-content:space-between;font-weight:700;font-size:17px;margin-top:10px;padding-top:14px;border-top:1px solid var(--line);}
+  .lineitem{display:flex;justify-content:space-between;font-size:14px;margin:9px 2px;}
+  .lineitem.new{color:var(--warn);font-weight:600;}
+  input.txt{width:100%;background:#10151c;border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:11px 12px;font-size:14px;margin-top:6px;}
+  label.small{font-size:12.5px;color:var(--muted);}
+  .chip{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 13px;margin:0 8px 8px 0;font-size:13.5px;cursor:pointer;}
+  .chip.sel{border-color:var(--brand);color:var(--brand);}
+  .tips{display:flex;gap:8px;margin:6px 0;}
+  .tip{flex:1;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;}
+  .tip.sel{border-color:var(--brand);background:rgba(18,185,129,.12);color:var(--brand);font-weight:700;}
+  .btn{display:inline-block;width:100%;text-align:center;cursor:pointer;background:var(--brand);color:var(--brand-ink);font-weight:700;border:none;border-radius:10px;padding:14px;font-size:15px;margin-top:18px;}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600;}
+  .flag{border:1px solid var(--warn);background:linear-gradient(180deg,var(--warn-soft),#20140a);border-radius:11px;padding:13px 15px;margin:6px 0 4px;display:flex;gap:12px;align-items:flex-start;animation:pop .28s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .flag .ic{flex:0 0 26px;height:26px;border-radius:7px;background:var(--warn);color:#20140a;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .flag .body{font-size:13.5px;line-height:1.5;flex:1;}
+  .flag .body b{color:var(--warn);}
+  .flag .dismiss{background:transparent;border:1px solid var(--warn);color:var(--warn);font-size:11px;padding:2px 8px;border-radius:12px;cursor:pointer;margin-top:8px;}
+  .tag{display:inline-block;font-size:10.5px;letter-spacing:.5px;color:var(--warn);border:1px solid var(--warn);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+  .ask{margin-top:16px;border:1px dashed var(--line);border-radius:11px;background:#10151c;padding:15px;}
+  .ask .q{font-size:13.5px;margin-bottom:12px;}
+  .likert{display:flex;gap:6px;}
+  .likert button{flex:1;background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:9px 0;font-size:13px;cursor:pointer;transition:.12s;}
+  .likert button:hover{border-color:var(--warn);color:var(--ink);}
+  .likert button.sel{background:var(--warn);color:#20140a;border-color:var(--warn);font-weight:700;}
+  .likscale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:7px;}
+  .rail{position:sticky;top:24px;}
+  .rail .card2{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px;margin-bottom:18px;}
+  .rail h3{margin:0 0 12px;font-size:13px;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;}
+  .flow{list-style:none;margin:0;padding:0;}
+  .flow li{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:12.5px;color:var(--muted);border-left:2px solid transparent;padding-left:11px;margin-left:2px;}
+  .flow li .k{font-size:10px;border-radius:5px;padding:1px 6px;margin-top:1px;white-space:nowrap;}
+  .k.correct{background:#0f2f22;color:#4fd6a0;border:1px solid #1c4d38;}
+  .k.false{background:#3a2414;color:var(--warn);border:1px solid #5a3a1f;}
+  .k.none{background:#1b212a;color:var(--muted);border:1px solid var(--line);}
+  .k.end{background:#151d2b;color:#7aa2ff;border:1px solid #2b3d63;}
+  .flow li.active{color:var(--ink);border-left-color:var(--warn);}
+  .legend{font-size:12.5px;color:var(--muted);line-height:1.6;}
+  .legend b{color:var(--ink);}
+  .pill{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle;}
+  .logbox{font-size:12px;color:var(--muted);line-height:1.7;}
+  .logbox .on{color:#4fd6a0;} .logbox .warnc{color:var(--warn);}
+  .nav{display:flex;gap:10px;margin-top:16px;}
+  .nav .btn{margin-top:0;}
+  .hint{font-size:12px;color:var(--muted);text-align:center;margin-top:12px;}
+  .big{font-size:15px;line-height:1.6;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Dark-Pattern Warning Tool</h1>
+    <span class="sub">Study prototype &middot; participant flow &middot; SIT723 / SIT792</span>
+  </header>
+  <div class="layout">
+    <div class="device">
+      <div class="appbar"><span>QuickBite</span><span class="cart">Dinner for two</span></div>
+      <div class="toolstrip">
+        <span class="left"><span class="dot" id="dot"></span> <span id="toolstate">Warning tool active</span></span>
+        <button class="offbtn" id="offbtn" onclick="toggleTool()">Turn tool off</button>
+      </div>
+      <div class="screen" id="screen"></div>
+    </div>
+    <div class="rail">
+      <div class="card2"><h3>Flow</h3><ul class="flow" id="flowList"></ul></div>
+      <div class="card2"><h3>Behavioural log (live)</h3><div class="logbox" id="log"></div></div>
+      <div class="card2"><h3>How to read this</h3>
+        <div class="legend">
+          <div><span class="pill" style="background:#12b981"></span><b>Correct flag</b> — a real dark pattern</div>
+          <div><span class="pill" style="background:#ff8a3d"></span><b>False flag</b> — tool is wrong</div>
+          <div style="margin-top:8px">4 correct + 2 false, spread out. After every flag: the annoyance question. <b>Main behavioural measure:</b> each warning can be dismissed (optional) or left and passed — the log records which, and how fast. Turning the tool off is a secondary, rarer signal.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const steps = [
+  {key:'none', label:'Restaurant list', tag:'—'},
+  {key:'none', label:'Menu (add mains)', tag:'—'},
+  {key:'correct', label:'Pre-ticked delivery', tag:'Correct'},
+  {key:'none', label:'Customise item', tag:'—'},
+  {key:'none', label:'Cart review', tag:'—'},
+  {key:'false', label:'Save-address box', tag:'False'},
+  {key:'none', label:'Delivery time', tag:'—'},
+  {key:'correct', label:'Pre-selected tip', tag:'Correct'},
+  {key:'false', label:'Newsletter box', tag:'False'},
+  {key:'correct', label:'Hidden fees', tag:'Correct'},
+  {key:'end', label:'Confirm & questions', tag:'Outcome'},
+];
+let i = 0;
+let toolOn = true;
+let logs = [];
+let dismissedThisFlag = false;
+function addLog(t, cls){ logs.push({t, cls}); renderLog(); }
+function renderLog(){
+  const el = document.getElementById('log');
+  if(logs.length===0){ el.innerHTML = '<span style="opacity:.6">No actions yet…</span>'; return; }
+  el.innerHTML = logs.slice(-7).map(l=>`<div>• <span class="${l.cls||''}">${l.t}</span></div>`).join('');
+}
+function toggleTool(){
+  toolOn = !toolOn;
+  document.getElementById('dot').className = toolOn ? 'dot' : 'dot off';
+  document.getElementById('toolstate').textContent = toolOn ? 'Warning tool active' : 'Warning tool OFF';
+  document.getElementById('offbtn').textContent = toolOn ? 'Turn tool off' : 'Turn tool on';
+  addLog(`Tool turned ${toolOn?'ON':'OFF'} (at: ${steps[i].label})`, toolOn?'on':'warnc');
+  render();
+}
+function annoyQuestion(){
+  return `<div class="ask"><div class="q">How annoying did you find this warning?</div>
+    <div class="likert" data-likert>${[1,2,3,4,5,6,7].map(n=>`<button onclick="pick(this)">${n}</button>`).join('')}</div>
+    <div class="likscale"><span>Not at all</span><span>Extremely</span></div></div>`;
+}
+function flagBlock(title, text){
+  if(!toolOn) return `<p class="muted">(Tool is off — no warning shown here.)</p>`;
+  return `<div class="flag"><div class="ic">!</div><div class="body"><b>${title}</b> ${text}
+    <br><button class="dismiss" onclick="dismiss(this)">Dismiss ✕</button> <span style="font-size:11px;color:var(--muted)">or leave it and continue</span></div></div>`;
+}
+function render(){
+  const s = document.getElementById('screen');
+  let h = '';
+  const stepno = `Step ${i+1} of ${steps.length}`;
+  if(i===0){ h=`<h2>QuickBite — restaurants near you</h2><div class="step">${stepno} · Pick a place</div>
+    <div class="row"><span class="name">Bella Napoli · Italian · ★4.6</span><span class="price">25–35 min</span></div>
+    <div class="row"><span class="name">Sakura Sushi · Japanese · ★4.5</span><span class="price">30–40 min</span></div>
+    <div class="row"><span class="name">The Curry House · Indian · ★4.7</span><span class="price">20–30 min</span></div>
+    <p class="muted">Tool stays quiet — nothing to warn about.</p>${nav()}`; }
+  if(i===1){ h=`<h2>Bella Napoli — menu</h2><div class="step">${stepno} · Add mains for two</div>
+    <div class="row"><span class="name">Margherita pizza</span><span class="price">£11.50</span></div>
+    <div class="row"><span class="name">Spaghetti carbonara</span><span class="price">£12.00</span></div>
+    <div class="row"><span class="name">Garlic bread (side)</span><span class="price">£4.50</span></div>
+    <p class="muted">Browsing and choosing — the real task. Tool quiet.</p>${nav()}`; }
+  if(i===2){ h=`<h2>Add-ons</h2><div class="step">${stepno} · One option was pre-selected</div>
+    <div class="row addon"><input type="checkbox" checked><div><div class="name">Priority delivery <span class="tag">PRE-TICKED</span></div><div class="muted">+£3.99 — added automatically</div></div><span class="price">£3.99</span></div>
+    ${flagBlock('Pre-selected option.','This add-on was ticked for you — you did not choose it (pre-selection). You can untick it.')}
+    ${toolOn?annoyQuestion():''}${nav(true)}`; }
+  if(i===3){ h=`<h2>Customise your pizza</h2><div class="step">${stepno} · Optional</div>
+    <div><span class="chip sel">Regular base</span><span class="chip">Thin base</span><span class="chip">Extra cheese +£1</span></div>
+    <p class="muted">A normal customisation screen. Tool quiet.</p>${nav()}`; }
+  if(i===4){ h=`<h2>Your cart</h2><div class="step">${stepno} · Review</div>
+    <div class="lineitem"><span>Margherita pizza</span><span>£11.50</span></div>
+    <div class="lineitem"><span>Spaghetti carbonara</span><span>£12.00</span></div>
+    <div class="lineitem"><span>Garlic bread</span><span>£4.50</span></div>
+    <div class="lineitem"><span>Priority delivery</span><span>£3.99</span></div>
+    <div class="total"><span>Subtotal</span><span>£31.99</span></div>
+    <p class="muted" style="margin-top:12px">Quiet screen before the first false flag.</p>${nav()}`; }
+  if(i===5){ h=`<h2>Delivery details</h2><div class="step">${stepno} · Where to?</div>
+    <label class="small">Delivery address</label><input class="txt" value="42 Rowan Street, Flat 3">
+    <div class="row" style="margin-top:14px"><div class="name">Save this address for next time</div><input type="checkbox" style="transform:scale(1.25);accent-color:var(--brand)"></div>
+    ${flagBlock('Possible manipulative design.','This checkbox may be pressuring you. <span style="color:var(--warn)">[FALSE FLAG — the box is a normal, optional convenience. Nothing was wrong.]</span>')}
+    ${toolOn?annoyQuestion():''}${nav(true)}`; }
+  if(i===6){ h=`<h2>Delivery time</h2><div class="step">${stepno} · Choose a slot</div>
+    <div><span class="chip sel">As soon as possible</span><span class="chip">Schedule for later</span></div>
+    <p class="muted">Normal slot picker. Tool quiet — this separates the two false flags.</p>${nav()}`; }
+  if(i===7){ h=`<h2>Add a tip</h2><div class="step">${stepno} · A tip was pre-selected</div>
+    <div class="tips"><div class="tip">0%</div><div class="tip">10%</div><div class="tip sel">15% ✓</div><div class="tip">20%</div></div>
+    <p class="muted">15% is selected for you by default.</p>
+    ${flagBlock('Pre-selected option.','A tip amount was chosen for you (pre-selection again). You can change it.')}
+    ${toolOn?annoyQuestion():''}${nav(true)}`; }
+  if(i===8){ h=`<h2>Contact preferences</h2><div class="step">${stepno} · Optional</div>
+    <div class="row"><div class="name">Email me offers and updates</div><input type="checkbox" style="transform:scale(1.25);accent-color:var(--brand)"></div>
+    ${flagBlock('Possible manipulative design.','This newsletter box may be a trick. <span style="color:var(--warn)">[FALSE FLAG — an ordinary opt-in, unticked. Nothing was wrong.]</span>')}
+    ${toolOn?annoyQuestion():''}${nav(true)}`; }
+  if(i===9){ h=`<h2>Payment</h2><div class="step">${stepno} · Review total and pay</div>
+    <div class="lineitem"><span>Subtotal</span><span>£31.99</span></div>
+    <div class="lineitem"><span>Tip (15%)</span><span>£4.80</span></div>
+    <div class="lineitem new"><span>Service fee <span class="tag">NEW</span></span><span>£2.80</span></div>
+    <div class="lineitem new"><span>Small-order fee <span class="tag">NEW</span></span><span>£1.50</span></div>
+    <div class="total"><span>Total to pay</span><span>£41.09</span></div>
+    ${flagBlock('Hidden costs.','These fees were not shown earlier and only appear now, at payment (hidden costs).')}
+    ${toolOn?annoyQuestion():''}${nav(true)}`; }
+  if(i===10){ h=`<h2>Order confirmed ✓</h2><div class="step">${stepno} · A few questions to finish</div>
+    <p class="big">Your dinner is on its way. Before you go:</p>
+    <div class="ask"><div class="q"><b>How likely would you be to turn this tool off?</b></div>
+      <div class="likert" data-likert>${[1,2,3,4,5,6,7].map(n=>`<button onclick="pick(this)">${n}</button>`).join('')}</div>
+      <div class="likscale"><span>Very unlikely</span><span>Very likely</span></div></div>
+    <div class="ask" style="margin-top:14px"><div class="q">How useful did you find the tool overall?</div>
+      <div class="likert" data-likert>${[1,2,3,4,5,6,7].map(n=>`<button onclick="pick(this)">${n}</button>`).join('')}</div>
+      <div class="likscale"><span>Not useful</span><span>Very useful</span></div></div>
+    <p class="muted" style="margin-top:14px">Annoyance after each of the 6 flags — 4 correct vs 2 false, within the same person — is linked to this answer and to the behavioural log.</p>${nav()}`; }
+  s.innerHTML = h;
+  renderFlow();
+}
+function nav(afterFlag){
+  const back = i>0?`<button class="btn ghost" style="flex:0 0 110px" onclick="go(-1)">Back</button>`:'';
+  const label = i===steps.length-1?'Restart':(afterFlag?'Continue':'Next');
+  let hint = afterFlag&&toolOn?`<div class="hint">Answer the question, then continue — survey baked into the flow.</div>`:'';
+  return `<div class="nav">${back}<button class="btn" onclick="go(1)">${label}</button></div>${hint}`;
+}
+function renderFlow(){
+  document.getElementById('flowList').innerHTML = steps.map((st,idx)=>{
+    const cls = st.key==='correct'?'correct':st.key==='false'?'false':st.key==='end'?'end':'none';
+    return `<li class="${idx===i?'active':''}"><span class="k ${cls}">${st.tag}</span> ${st.label}</li>`;
+  }).join('');
+}
+function pick(btn){ const g=btn.closest('[data-likert]'); g.querySelectorAll('button').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); }
+function dismiss(btn){ dismissedThisFlag = true; addLog(`Dismissed warning (at: ${steps[i].label})`, 'warnc'); btn.closest('.flag').style.opacity=.4; btn.disabled=true; btn.textContent='Dismissed'; }
+function go(d){
+  if(i===steps.length-1 && d>0){ i=0; logs=[]; toolOn=true; dismissedThisFlag=false; toggleReset(); render(); renderLog(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  const prev=i;
+  // if leaving a flag screen without dismissing, log that choice
+  if(d>0 && toolOn && (steps[prev].key==='correct'||steps[prev].key==='false') && !dismissedThisFlag){
+    addLog(`Left ${steps[prev].tag.toLowerCase()} warning on screen, continued (time recorded)`, '');
+  }
+  dismissedThisFlag=false;
+  i=Math.max(0,Math.min(steps.length-1,i+d));
+  render();
+}
+function toggleReset(){ document.getElementById('dot').className='dot'; document.getElementById('toolstate').textContent='Warning tool active'; document.getElementById('offbtn').textContent='Turn tool off'; }
+renderLog(); render();
+</script>
+</body>
+</html>
