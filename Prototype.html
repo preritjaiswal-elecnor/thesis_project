@@ -82,6 +82,10 @@
   .nav .btn{margin-top:0;}
   .hint{font-size:12px;color:var(--muted);text-align:center;margin-top:12px;}
   .big{font-size:15px;line-height:1.6;margin-bottom:4px;}
+  body.participant .rnote{display:none !important;}
+  body.participant .rail{display:none;}
+  body.participant .top .sub{display:none;}
+  body.participant .layout{grid-template-columns:minmax(0,560px);justify-content:center;}
 </style>
 </head>
 <body>
@@ -106,13 +110,16 @@
         <div class="legend">
           <div><span class="pill" style="background:#12b981"></span><b>Correct flag</b> — a real dark pattern</div>
           <div><span class="pill" style="background:#ff8a3d"></span><b>False flag</b> — tool is wrong</div>
-          <div style="margin-top:8px">4 correct + 2 false, spread out. After every flag: the annoyance question. <b>Main behavioural measure:</b> each warning can be dismissed (optional) or left and passed — the log records which, and how fast. Turning the tool off is a secondary, rarer signal.</div>
+          <div style="margin-top:8px">3 correct + 2 false, alternating. After every flag: the annoyance question. <b>Main behavioural measure:</b> each warning can be dismissed (optional) or left and passed — the log records which, and how fast. Turning the tool off is a secondary, rarer signal.</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 <script>
+// Add ?participant to the address (Prototype.html?participant) to hide all researcher-only labels.
+const P = new URLSearchParams(location.search).has('participant');
+document.body.classList.toggle('participant', P);
 const steps = [
   {key:'none', label:'Restaurant list', tag:'—'},
   {key:'none', label:'Menu (add mains)', tag:'—'},
@@ -162,42 +169,42 @@ function render(){
     <div class="row"><span class="name">Bella Napoli · Italian · ★4.6</span><span class="price">25–35 min</span></div>
     <div class="row"><span class="name">Sakura Sushi · Japanese · ★4.5</span><span class="price">30–40 min</span></div>
     <div class="row"><span class="name">The Curry House · Indian · ★4.7</span><span class="price">20–30 min</span></div>
-    <p class="muted">Tool stays quiet — nothing to warn about.</p>${nav()}`; }
+    <p class="muted rnote">Tool stays quiet — nothing to warn about.</p>${nav()}`; }
   if(i===1){ h=`<h2>Bella Napoli — menu</h2><div class="step">${stepno} · Add mains for two</div>
     <div class="row"><span class="name">Margherita pizza</span><span class="price">£11.50</span></div>
     <div class="row"><span class="name">Spaghetti carbonara</span><span class="price">£12.00</span></div>
     <div class="row"><span class="name">Garlic bread (side)</span><span class="price">£4.50</span></div>
-    <p class="muted">Browsing and choosing — the real task. Tool quiet.</p>${nav()}`; }
-  if(i===2){ h=`<h2>Add-ons</h2><div class="step">${stepno} · One option was pre-selected</div>
-    <div class="row addon"><input type="checkbox" checked><div><div class="name">Priority delivery <span class="tag">PRE-TICKED</span></div><div class="muted">+£3.99 — added automatically</div></div><span class="price">£3.99</span></div>
+    <p class="muted rnote">Browsing and choosing — the real task. Tool quiet.</p>${nav()}`; }
+  if(i===2){ h=`<h2>Add-ons</h2><div class="step">${stepno} · ${P?'Choose extras':'One option was pre-selected'}</div>
+    <div class="row addon"><input type="checkbox" checked><div><div class="name">Priority delivery <span class="tag rnote">PRE-TICKED</span></div><div class="muted">+£3.99 — added automatically</div></div><span class="price">£3.99</span></div>
     ${flagBlock('Pre-selected option.','This add-on was ticked for you — you did not choose it (pre-selection). You can untick it.')}
     ${toolOn?annoyQuestion():''}${nav(true)}`; }
   if(i===3){ h=`<h2>Customise your pizza</h2><div class="step">${stepno} · Optional</div>
     <div><span class="chip sel">Regular base</span><span class="chip">Thin base</span><span class="chip">Extra cheese +£1</span></div>
-    <p class="muted">A normal customisation screen. Tool quiet.</p>${nav()}`; }
+    <p class="muted rnote">A normal customisation screen. Tool quiet.</p>${nav()}`; }
   if(i===4){ h=`<h2>Your cart</h2><div class="step">${stepno} · Review</div>
     <div class="lineitem"><span>Margherita pizza</span><span>£11.50</span></div>
     <div class="lineitem"><span>Spaghetti carbonara</span><span>£12.00</span></div>
     <div class="lineitem"><span>Garlic bread</span><span>£4.50</span></div>
     <div class="lineitem"><span>Priority delivery</span><span>£3.99</span></div>
     <div class="total"><span>Subtotal</span><span>£31.99</span></div>
-    <p class="muted" style="margin-top:12px">Quiet screen before the first false flag.</p>${nav()}`; }
+    <p class="muted rnote" style="margin-top:12px">Quiet screen before the first false flag.</p>${nav()}`; }
   if(i===5){ h=`<h2>Delivery details</h2><div class="step">${stepno} · Where to?</div>
     <label class="small">Delivery address</label><input class="txt" value="42 Rowan Street, Flat 3">
     <div class="row" style="margin-top:14px"><div class="name">Save this address for next time</div><input type="checkbox" style="transform:scale(1.25);accent-color:var(--brand)"></div>
-    ${flagBlock('Possible manipulative design.','This checkbox may be pressuring you. <span style="color:var(--warn)">[FALSE FLAG — the box is a normal, optional convenience. Nothing was wrong.]</span>')}
+    ${flagBlock('Possible manipulative design.','This checkbox may be pressuring you. <span class="rnote" style="color:var(--warn)">[FALSE FLAG — the box is a normal, optional convenience. Nothing was wrong.]</span>')}
     ${toolOn?annoyQuestion():''}${nav(true)}`; }
   if(i===6){ h=`<h2>Delivery time</h2><div class="step">${stepno} · Choose a slot</div>
     <div><span class="chip sel">As soon as possible</span><span class="chip">Schedule for later</span></div>
-    <p class="muted">Normal slot picker. Tool quiet — this separates the two false flags.</p>${nav()}`; }
-  if(i===7){ h=`<h2>Add a tip</h2><div class="step">${stepno} · A tip was pre-selected</div>
+    <p class="muted rnote">Normal slot picker. Tool quiet — this separates the two false flags.</p>${nav()}`; }
+  if(i===7){ h=`<h2>Add a tip</h2><div class="step">${stepno} · ${P?'Optional':'A tip was pre-selected'}</div>
     <div class="tips"><div class="tip">0%</div><div class="tip">10%</div><div class="tip sel">15% ✓</div><div class="tip">20%</div></div>
-    <p class="muted">15% is selected for you by default.</p>
+    <p class="muted rnote">15% is selected for you by default.</p>
     ${flagBlock('Pre-selected option.','A tip amount was chosen for you (pre-selection again). You can change it.')}
     ${toolOn?annoyQuestion():''}${nav(true)}`; }
   if(i===8){ h=`<h2>Contact preferences</h2><div class="step">${stepno} · Optional</div>
     <div class="row"><div class="name">Email me offers and updates</div><input type="checkbox" style="transform:scale(1.25);accent-color:var(--brand)"></div>
-    ${flagBlock('Possible manipulative design.','This newsletter box may be a trick. <span style="color:var(--warn)">[FALSE FLAG — an ordinary opt-in, unticked. Nothing was wrong.]</span>')}
+    ${flagBlock('Possible manipulative design.','This newsletter box may be a trick. <span class="rnote" style="color:var(--warn)">[FALSE FLAG — an ordinary opt-in, unticked. Nothing was wrong.]</span>')}
     ${toolOn?annoyQuestion():''}${nav(true)}`; }
   if(i===9){ h=`<h2>Payment</h2><div class="step">${stepno} · Review total and pay</div>
     <div class="lineitem"><span>Subtotal</span><span>£31.99</span></div>
@@ -215,7 +222,7 @@ function render(){
     <div class="ask" style="margin-top:14px"><div class="q">How useful did you find the tool overall?</div>
       <div class="likert" data-likert>${[1,2,3,4,5,6,7].map(n=>`<button onclick="pick(this)">${n}</button>`).join('')}</div>
       <div class="likscale"><span>Not useful</span><span>Very useful</span></div></div>
-    <p class="muted" style="margin-top:14px">Annoyance after each of the 6 flags — 4 correct vs 2 false, within the same person — is linked to this answer and to the behavioural log.</p>${nav()}`; }
+    <p class="muted rnote" style="margin-top:14px">Annoyance after each of the 5 flags — 3 correct vs 2 false, within the same person — is linked to this answer and to the behavioural log.</p>${nav()}`; }
   s.innerHTML = h;
   renderFlow();
 }
